@@ -1,0 +1,53 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2006                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      topoSetDict;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+actions
+(
+    {
+        name    surfaceVolumeZone1;
+        type    cellZoneSet;
+        action  new;  //選択されたセル
+        source  cylinderToCell; //範囲の指定方法 boxToCellは六面体により指定
+        //box     (0.092 0.027 -0.84) (0.115 0.048 -0.83); //Min座標 Max座標
+        p1 (0.1035 0.0375 -0.835);
+        p2 (0.1035 0.0375 -0.83);
+        radius      0.01;
+    }
+    {
+        name    surfaceVolumeZone2;
+        type    cellZoneSet;
+        action  new;  //選択されたセル
+        source  boxToCell; //範囲の指定方法 boxToCellは六面体により指定
+        box     (0.092 0.038 -0.785) (0.115 0.045 -0.78); //Min座標 Max座標
+    }
+    {
+        name    surfaceVolumeZone3;
+        type    cellZoneSet;
+        action  new;  //選択されたセル
+        source  boxToCell; //範囲の指定方法 boxToCellは六面体により指定
+        box     (2.4 0.12 -0.76) (2.9 0.22 -0.74); //Min座標 Max座標
+    }
+    {
+        name    surfaceVolumeZone4;
+        type    cellZoneSet;
+        action  new;  //選択されたセル
+        source  boxToCell; //範囲の指定方法 boxToCellは六面体により指定
+        box     (2.4 0.12 -0.37) (2.9 0.22 -0.35); //Min座標 Max座標
+    }
+);
+
+// ************************************************************************* //

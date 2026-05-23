@@ -1,0 +1,76 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2412                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      k;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions    [ 0 2 -2 0 0 0 0 ];
+internalField    uniform 1.35e-13;
+boundaryField
+{
+    ".*"
+    {
+		type    kqRWallFunction;
+		value    uniform 1.35e-13;
+    }
+
+    maintankInlet_vol_2-4_0
+    {
+		type    turbulentIntensityKineticEnergyInlet;
+		intensity    0.03;
+		value    uniform 1.35e-05;
+    }
+
+    tempInlet_vol_2-5_0
+    {
+		type    turbulentIntensityKineticEnergyInlet;
+		intensity    0.03;
+		value    uniform 1.35e-05;
+    }
+
+    pumpOutlet_vol_2-4_0
+    {
+		type    inletOutlet;
+		inletValue    uniform 1.35e-05;
+		value    uniform 1.35e-13;
+    }
+    floodOutlet_press_2-4_0
+    {
+		type    inletOutlet;
+		inletValue    uniform 1.35e-05;
+		value    uniform 1.35e-13;
+    }
+    tempOutlet_vol_3-6_0
+    {
+		type    inletOutlet;
+		inletValue    uniform 1.35e-05;
+		value    uniform 1.35e-13;
+    }
+    topSlip_slip_2-4_3
+    {
+        type            slip;
+    }
+
+    pumpinWallheat_wall_2-4_0
+    {
+		type    kqRWallFunction;
+		value    uniform 1.35e-13;
+    }
+    floodinWallhate_wall_2-4_3
+    {
+		type    kqRWallFunction;
+		value    uniform 1.35e-13;
+    }
+}
+
+// ************************************************************************* //

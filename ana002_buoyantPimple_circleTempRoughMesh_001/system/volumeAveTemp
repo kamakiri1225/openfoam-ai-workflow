@@ -1,0 +1,85 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2006                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+// \*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      volumeAveTemp;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+  
+functions
+{
+  volFieldValue6_1
+  {
+      type            volFieldValue;
+      libs            (fieldFunctionObjects);
+      fields          (T);
+      operation       volAverage;
+      regionType      cellZone;
+      name            surfaceVolumeZone6_1;
+      postOperation   none;
+      weightField     alpha1;
+      writeFields     false;
+      scalingFactor   1.0;
+      writePrecision  8;
+      writeToFile     true;
+      useUserTime     true;
+      region          region0;
+      enabled         true;
+      log             true;
+      timeStart       0;
+      timeEnd         10000;
+      executeControl  timeStep;
+      executeInterval 1;
+      writeControl    timeStep;
+      writeInterval   1;
+  }
+  volFieldValue6_2
+  {
+      $volFieldValue6_1
+      name            surfaceVolumeZone6_2;
+  }
+  volFieldValue6_3
+  {
+      $volFieldValue6_1
+      name            surfaceVolumeZone6_3;
+  }
+  volFieldValue6_4
+  {
+      $volFieldValue6_1
+      name            surfaceVolumeZone6_4;
+  }
+  volFieldValue6_5
+  {
+      $volFieldValue6_1
+      name            surfaceVolumeZone6_5;
+  }
+  volFieldValue6_6
+  {
+      $volFieldValue6_1
+      name            surfaceVolumeZone6_6;
+  }
+  volFieldValue3_1
+  {
+      $volFieldValue6_1
+      name            surfaceVolumeZone3_1;
+  }
+  volFieldValue3_2
+  {
+      $volFieldValue6_1
+      name            surfaceVolumeZone3_2;
+  }
+  volFieldValue3_3
+  {
+      $volFieldValue6_1
+      name            surfaceVolumeZone3_3;
+  }
+}

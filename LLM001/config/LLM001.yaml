@@ -1,0 +1,55 @@
+case:
+  name: LLM001_pumpAB
+
+units:
+  length: m
+  flow: L/min
+
+tank:
+  size_m: [0.600, 1.000, 0.160]
+
+mesh:
+  output: ../mesh/LLM001_pumpAB.msh
+  msh_version: 2.2
+  global_size_m: 0.040
+  pump_size_m: 0.005
+  refine_dist_min_m: 0.015
+  refine_dist_max_m: 0.080
+
+fluid:
+  name: water
+  nu_m2_s: 1.0e-06
+
+simulation:
+  solver: simpleFoam
+  turbulence_model: kOmegaSST
+  end_time: 1000
+  write_interval: 100
+
+pumps:
+  - id: pumpA
+    patch: pumpA_outlet
+    role: outlet
+    center_m: [0.150, 0.800]
+    outer_diameter_m: 0.070
+    inner_diameter_m: 0.060
+    bottom_offset_m: 0.010
+    top: tankTop
+    flow_L_min: 50.0
+
+  - id: pumpB
+    patch: pumpB_inlet
+    role: inlet
+    center_m: [0.450, 0.500]
+    outer_diameter_m: 0.040
+    inner_diameter_m: 0.030
+    bottom_offset_m: 0.010
+    top: tankTop
+    flow_L_min: 50.0
+
+patches:
+  pump_wall: pumpWall
+  top_wall: topWall
+  bottom_wall: bottom
+  side_wall: sideWall
+  front_wall: frontWall

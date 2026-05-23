@@ -1,0 +1,12 @@
+#!/bin/sh
+cd "$(dirname "$0")" || exit 1
+
+if [ -x case/Allclean ]; then
+    (cd case && ./Allclean)
+else
+    (cd case && sh Allclean)
+fi
+
+rm -f mesh/LLM001_pumpAB.msh
+
+echo "Cleaned LLM001 generated mesh and case results."

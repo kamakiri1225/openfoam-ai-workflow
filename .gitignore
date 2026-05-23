@@ -1,0 +1,28 @@
+# ============================================================
+# OpenFOAM 計算結果を除外
+# ============================================================
+
+# --- LLM001: 時刻ディレクトリ（初期条件 0/ は保持） ---
+LLM001/case/[1-9]*/
+LLM001/case/postProcessing/
+LLM001/case/log.*
+LLM001/case/post.foam
+LLM001/case/mesh/
+
+# --- ana002: 時刻ディレクトリ・並列結果（初期条件 0/ は保持） ---
+ana002_buoyantPimple_circleTempRoughMesh_001/[1-9]*/
+ana002_buoyantPimple_circleTempRoughMesh_001/processor*/
+ana002_buoyantPimple_circleTempRoughMesh_001/postProcessing/
+ana002_buoyantPimple_circleTempRoughMesh_001/dynamicCode/
+ana002_buoyantPimple_circleTempRoughMesh_001/log.*
+ana002_buoyantPimple_circleTempRoughMesh_001/log.dat
+ana002_buoyantPimple_circleTempRoughMesh_001/post.foam
+
+# --- Python キャッシュ ---
+__pycache__/
+*.pyc
+*.pyo
+
+# --- OS ---
+.DS_Store
+Thumbs.db

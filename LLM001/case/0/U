@@ -1,0 +1,53 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volVectorField;
+    object      U;
+}
+
+dimensions      [0 1 -1 0 0 0 0];
+
+internalField   uniform (0 0 0);
+
+boundaryField
+{
+    pumpA_outlet
+    {
+        type        pressureInletOutletVelocity;
+        value       uniform (0 0 0);
+    }
+
+    pumpB_inlet
+    {
+        type                flowRateInletVelocity;
+        volumetricFlowRate  constant 0.0008333333333; // 50 L/min
+        value               uniform (0 0 0);
+    }
+
+    pumpWall
+    {
+        type        noSlip;
+    }
+
+    topWall
+    {
+        type        noSlip;
+    }
+
+    bottom
+    {
+        type        noSlip;
+    }
+
+    sideWall
+    {
+        type        noSlip;
+    }
+
+    frontWall
+    {
+        type        noSlip;
+    }
+
+}

@@ -1,0 +1,58 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      omega;
+}
+
+dimensions      [0 0 -1 0 0 0 0];
+
+internalField   uniform 53;
+
+boundaryField
+{
+    pumpA_outlet
+    {
+        type        inletOutlet;
+        inletValue  uniform 53;
+        value       uniform 53;
+    }
+
+    pumpB_inlet
+    {
+        type        fixedValue;
+        value       uniform 53;
+    }
+
+    pumpWall
+    {
+        type        omegaWallFunction;
+        value       uniform 53;
+    }
+
+    topWall
+    {
+        type        omegaWallFunction;
+        value       uniform 53;
+    }
+
+    bottom
+    {
+        type        omegaWallFunction;
+        value       uniform 53;
+    }
+
+    sideWall
+    {
+        type        omegaWallFunction;
+        value       uniform 53;
+    }
+
+    frontWall
+    {
+        type        omegaWallFunction;
+        value       uniform 53;
+    }
+
+}

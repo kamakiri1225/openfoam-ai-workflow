@@ -1,0 +1,58 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      k;
+}
+
+dimensions      [0 2 -2 0 0 0 0];
+
+internalField   uniform 0.0066;
+
+boundaryField
+{
+    pumpA_outlet
+    {
+        type        inletOutlet;
+        inletValue  uniform 0.0066;
+        value       uniform 0.0066;
+    }
+
+    pumpB_inlet
+    {
+        type        fixedValue;
+        value       uniform 0.0066;
+    }
+
+    pumpWall
+    {
+        type        kqRWallFunction;
+        value       uniform 0.0066;
+    }
+
+    topWall
+    {
+        type        kqRWallFunction;
+        value       uniform 0.0066;
+    }
+
+    bottom
+    {
+        type        kqRWallFunction;
+        value       uniform 0.0066;
+    }
+
+    sideWall
+    {
+        type        kqRWallFunction;
+        value       uniform 0.0066;
+    }
+
+    frontWall
+    {
+        type        kqRWallFunction;
+        value       uniform 0.0066;
+    }
+
+}

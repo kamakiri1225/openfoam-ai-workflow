@@ -1,0 +1,5 @@
+#!/bin/sh
+cd "$(dirname "$0")" || exit 1
+
+cd geometry || exit 1
+./run_gmsh.sh

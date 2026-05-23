@@ -1,0 +1,46 @@
+#!/bin/sh
+cd "$(dirname "$0")" || exit 1
+
+SOURCE_MESH="../mesh/LLM001_pumpAB.msh"
+CASE_MESH="mesh/LLM001_pumpAB.msh"
+CONFIG_FILE="../config/LLM001.yaml"
+
+# Geometry is generated in SI units by LLM001_pumpA.py:
+# tank = 0.600 x 1.000 x 0.160 [m].
+# Therefore no mm-to-m conversion is needed here.
+MESH_SCALE=1
+
+if [ -r "$WM_PROJECT_DIR/bin/tools/RunFunctions" ]; then
+    . "$WM_PROJECT_DIR/bin/tools/RunFunctions"
+else
+    echo "OpenFOAM RunFunctions not found. Source OpenFOAM first."
+    exit 1
+fi
+
+python3 ../tools/generate_openfoam_from_yaml.py "$CONFIG_FILE"
+
+if [ ! -f "$SOURCE_MESH" ]; then
+    echo "Mesh file not found: $SOURCE_MESH"
+    echo "Generate it first with: cd ../geometry && python3 LLM001_pumpA.py"
+    exit 1
+fi
+
+mkdir -p mesh
+
+if [ ! -f "$CASE_MESH" ] || [ "$SOURCE_MESH" -nt "$CASE_MESH" ]; then
+    cp "$SOURCE_MESH" "$CASE_MESH"
+
+    echo "Copied mesh: $SOURCE_MESH -> $CASE_MESH"
+    echo "Mesh scale: $MESH_SCALE (gmsh geometry is already in metres)"
+fi
+
+if [ ! -f constant/polyMesh/points ] || [ "$CASE_MESH" -nt constant/polyMesh/points ]; then
+    runApplication gmshToFoam "$CASE_MESH"
+fi
+
+runApplication changeDictionary -constant -noZero
+runApplication checkMesh
+runApplication simpleFoam
+
+touch post.foam
+echo "Created ParaView reader file: post.foam"

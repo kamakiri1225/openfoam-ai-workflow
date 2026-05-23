@@ -1,0 +1,95 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2012                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    system;
+    object      preProcess;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+functions
+{
+  codevolFieldValue
+  {
+      type    coded;
+      name    codevolFieldValue;
+      libs    (utilityFunctionObjects);
+
+      codeExecute
+      #{
+          Info << "============= codevolFieldValue ===============" << endl;
+          volVectorField C = mesh().C();//cell infomation
+          scalarField V = mesh().V();//cell volume
+
+          // intitial 
+          label Vi = 0;
+          scalar Volsum = 0.0;
+          vector UVsum(0.0, 0.0, 0.0);
+          scalar pVsum = 0.0;
+          // scalar phisum = 0.0;
+
+          // U,p, phiを定義
+          const volVectorField& U = mesh().lookupObject<volVectorField>("U");
+          const volScalarField& p = mesh().lookupObject<volScalarField>("p");
+          // const surfaceScalarField& phi = mesh().lookupObject<surfaceScalarField>("phi");
+
+          /*
+            底面から2.5mm~5mmの間で0.3m/s以下の割合を計算
+          */
+          scalar limU = 0.1; //Umag <= 0.1 [m/s]
+          scalar VolUlim = 0.0; 
+
+
+          //https://caefn.com/openfoam/ja-cellsource
+          //https://caefn.com/openfoam/ja-vector-operations
+          forAll(C, i)
+          {
+              //x,y,x座標を定義　1つ目の引数がcellのid、2つ目の引数がx,y,z座標
+              scalar x = C[i][0];
+              scalar y = C[i][1];
+              scalar z = C[i][2];
+
+              //x,y,x座標を定義　1つ目の引数がcellのid、2つ目の引数がx,y,z座標
+              if ( (z >=0.001+0.0223) && (z <=0.005+0.0223) &&
+                   (y >=-1.4) && (y <=-0.28) 
+               ) //底面から5mm(y<=0.005)の領域のみ
+              {
+                /*
+                    idが取得できたらU,p,phiにアクセスすると値を取得できる
+                */
+                vector pos(x, y, z);
+                label cellNo = mesh().findCell(pos);
+                Vi += 1;
+                Volsum += V[i];
+                UVsum += U[cellNo]*V[i];
+                pVsum += p[cellNo]*V[i];
+                //phisum += phi[cellNo]*V[i];
+                if (mag(U[cellNo]) <= limU)
+                {
+                    VolUlim += V[i];
+                }
+              }
+          }
+          // 出力
+          Info << "Average Value write:" << endl;
+          Info << "volAverage(codevolFieldValue) of U =" <<  UVsum/Volsum << ": Umag = " << mag(UVsum/Volsum) << endl;
+          Info << "volAverage(codevolFieldValue) of p =" <<  pVsum/Volsum << endl;
+          // Info << "volAverage(codevolFieldValue) of phi = U*A = " <<  mag(UVsum/Volsum*Area) << endl;
+          Info << "Vi " << Vi << endl;
+
+          Info << " ==== Calculate the percentage below 0.1 m/s between 1mm~5mm from the bottom ====" << endl;
+          Info << "cell volume VolUlim/Volsum = " << VolUlim/Volsum*100.0 << "%" << endl;
+      #};
+  }
+}
+
+
+// ************************************************************************* //

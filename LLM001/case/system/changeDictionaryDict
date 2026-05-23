@@ -1,0 +1,53 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      changeDictionaryDict;
+}
+
+boundary
+{
+    pumpA_outlet
+    {
+        type         patch;
+        physicalType patch;
+    }
+
+    pumpB_inlet
+    {
+        type         patch;
+        physicalType patch;
+    }
+
+    pumpWall
+    {
+        type         wall;
+        physicalType wall;
+    }
+
+    topWall
+    {
+        type         wall;
+        physicalType wall;
+    }
+
+    bottom
+    {
+        type         wall;
+        physicalType wall;
+    }
+
+    sideWall
+    {
+        type         wall;
+        physicalType wall;
+    }
+
+    frontWall
+    {
+        type         wall;
+        physicalType wall;
+    }
+
+}

@@ -1,0 +1,216 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2412                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      fvSolution;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// solvers
+// {
+//     "rho.*"
+//     {
+//         solver          PCG;
+//         preconditioner  DIC;
+//         tolerance       0;
+//         relTol          0;
+//     }
+
+//     p_rgh
+//     {
+//         solver          PCG;
+//         preconditioner  DIC;
+//         tolerance       1e-8;
+//         relTol          0.01;
+//     }
+
+//     p_rghFinal
+//     {
+//         $p_rgh;
+//         relTol          0;
+//     }
+
+//     "(U|h|e|k|epsilon|R)"
+//     {
+//         solver          PBiCGStab;
+//         preconditioner  DILU;
+//         tolerance       1e-6;
+//         relTol          0.1;
+//     }
+
+//     "(U|h|e|k|epsilon|R)Final"
+//     {
+//         $U;
+//         relTol          0;
+//     }
+// }
+
+// PIMPLE
+// {
+//     momentumPredictor yes;
+//     nOuterCorrectors 1;
+//     nCorrectors     2;
+//     nNonOrthogonalCorrectors 0;
+//     // pRefCell        0;
+//     // pRefValue       101325;
+// }
+
+solvers
+{
+	U
+	{
+		solver    smoothSolver;
+		tolerance    1e-6;
+		minIter    1;
+		relTol    0.1;
+		smoother    symGaussSeidel;
+		preconditioner    DILU;
+	}
+ 
+	UFinal
+	{
+		$U    ;
+		tolerance    1e-6;
+		relTol    0.0;
+	}
+ 
+	p_rgh
+	{
+		solver    GAMG;
+		tolerance    1e-6;
+		relTol    0.01;
+		minIter    1;
+		smoother    DICGaussSeidel;
+		nPreSweeps    0;
+		nPostSweeps    2;
+		cacheAgglomeration    on;
+		agglomerator    faceAreaPair;
+		nCellsInCoarsestLevel    200;
+		mergeLevels    1;
+		nFinestSweeps    2;
+		nVcycles    2;
+	}
+ 
+	p_rghFinal
+	{
+		$p_rgh    ;
+		tolerance    1e-6;
+		relTol    0.0;
+	}
+ 
+	"k|omega|epsilon|nuTilda"
+	{
+		solver    smoothSolver;
+		tolerance    1e-6;
+		minIter    1;
+		relTol    0.1;
+		smoother    symGaussSeidel;
+		preconditioner    DILU;
+	}
+ 
+	"kFinal|omegaFinal|epsilonFinal|nuTildaFinal"
+	{
+		$k    ;
+		tolerance    1e-6;
+		relTol    0.0;
+	}
+ 
+	h
+	{
+		solver    smoothSolver;
+		tolerance    1e-6;
+		minIter    1;
+		relTol    0.1;
+		smoother    symGaussSeidel;
+		preconditioner    DILU;
+	}
+ 
+	hFinal
+	{
+		$h    ;
+		tolerance    1e-6;
+		relTol    0.0;
+	}
+ 
+	"rho.*"
+	{
+		solver    PCG;
+		preconditioner    DIC;
+		tolerance    0;
+		relTol    0;
+	}
+ 
+	Ii
+	{
+		solver    PBiCG;
+		preconditioner    DILU;
+		tolerance    1e-4;
+		relTol    0;
+		minIter    1;
+	}
+ 
+}
+ 
+PIMPLE
+{
+	momentumPredictor    on;
+	consistent    off;
+	nNonOrthogonalCorrectors    0;
+	pRefCell    0;
+	pRefValue    0;
+	nOuterCorrectors    1;
+	nCorrectors    3;
+	correctPhi    off;
+	turbOnFinalIterOnly    on;
+	moveMeshOuterCorrectors    on;
+	residualControl
+	{
+		U
+		{
+			tolerance    1e-4;
+			relTol    0;
+		}
+ 
+		p_rgh
+		{
+			tolerance    5e-4;
+			relTol    0;
+		}
+ 
+	}
+ 
+}
+ 
+relaxationFactors
+{
+	fields
+	{
+		p_rgh    1;
+		p_rghFinal    1;
+	}
+ 
+	equations
+	{
+		U    1;
+		UFinal    1;
+		h    1;
+		hFinal    1;
+		"k|epsilon|omega|nuTilda"    1;
+		"(k|epsilon|omega|nuTilda)Final"    1;
+	}
+ 
+}
+ 
+cache
+{
+	     grad(U);
+}
+// ************************************************************************* //

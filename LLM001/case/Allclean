@@ -1,0 +1,9 @@
+#!/bin/sh
+cd "$(dirname "$0")" || exit 1
+
+rm -rf [1-9]* processor* postProcessing log.* dynamicCode
+rm -rf constant/polyMesh
+rm -rf mesh
+rm -f post.foam
+
+echo "Cleaned OpenFOAM case results and converted mesh."

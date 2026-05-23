@@ -1,0 +1,77 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2412                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      alphat;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions      [1 -1 -1 0 0 0 0];
+
+internalField   uniform 0;
+
+boundaryField
+{
+    ".*"
+    {
+		type    compressible::alphatWallFunction;
+		Prt    0.85;
+		value    uniform 0;
+    }
+
+    maintankInlet_vol_2-4_0
+    {
+		type    calculated;
+		value    uniform 0;
+    }
+
+    tempInlet_vol_3-6_0
+    {
+		type    calculated;
+		value    uniform 0;
+    }
+
+    pumpOutlet_vol_2-4_0
+    {
+		type    calculated;
+		value    uniform 0;
+    }
+    floodOutlet_press_2-4_0
+    {
+		type    calculated;
+		value    uniform 0;
+    }
+    tempOutlet_vol_3-6_0
+    {
+		type    calculated;
+		value    uniform 0;
+    }
+    topSlip_slip_2-4_3
+    {
+        type            slip;
+    }
+
+    pumpinWallheat_wall_2-4_0
+    {
+		type    compressible::alphatWallFunction;
+		Prt    0.85;
+		value    uniform 0;
+    }
+    floodinWallhate_wall_2-4_3
+    {
+		type    compressible::alphatWallFunction;
+		Prt    0.85;
+		value    uniform 0;
+    }
+}
+
+
+// ************************************************************************* //

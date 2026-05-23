@@ -1,0 +1,116 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    system;
+    object      outletWeightAreaTempFile_code;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+outletWeightAverageTemp
+{
+    type    coded;
+    name    codevolFieldValue;
+    libs    (utilityFunctionObjects);
+
+    codeExecute
+    #{
+        Info << "Starting outletWeightAverageTemp calculation" << endl;
+        // ============= codevolFieldValue ===============
+
+        // 汲み上げポンプの境界面の名前を指定する
+        // word ToutCyclonBoundaryName = "cycloneOutlet_vol_2-4_0";    //サイクロン汲上➡サイクロン戻り
+        //word ToutWorkWashBoundaryName = "washingOutlet_vol_2-4_3";  //ワーク洗浄➡ノズル
+        //word ToutTempBoundaryName = "tempOutlet_vol_2-6_3";         //温度管理汲上➡温度管理戻り
+        //word ToutInteBoundaryName = "integraOutlet_vol_2-4_0";      //統合ポンプ汲上➡コンベア
+        word ToutcycloneBoundaryName = "pumpOutlet_vol_2-4_0";      //統合ポンプ汲上➡コンベア
+        word ToutFloodBoundaryName = "floodOutlet_press_2-4_0";        //フラッド➡コンベア
+        
+        // U, Tを定義
+        const volVectorField& U = mesh().lookupObject<volVectorField>("U");
+        const volScalarField& T = mesh().lookupObject<volScalarField>("T");
+
+        // targetNameのIDの取得
+        // const label ToutCyclonID = mesh().boundaryMesh().findPatchID(ToutCyclonBoundaryName);
+        //const label ToutWorkWashID = mesh().boundaryMesh().findPatchID(ToutWorkWashBoundaryName);
+        //const label ToutTempID = mesh().boundaryMesh().findPatchID(ToutTempBoundaryName);
+        //const label ToutInteID = mesh().boundaryMesh().findPatchID(ToutInteBoundaryName);
+        const label ToutcyclonID = mesh().boundaryMesh().findPatchID(ToutcycloneBoundaryName);
+        const label ToutFloodID = mesh().boundaryMesh().findPatchID(ToutFloodBoundaryName);
+
+        // targetNameのIDから速度場の取得
+        // const fvPatchVectorField& ToutCyclonUList = U.boundaryField()[ToutCyclonID];
+        //const fvPatchVectorField& ToutWorkWashUList = U.boundaryField()[ToutWorkWashID];
+        //const fvPatchVectorField& ToutTempUList = U.boundaryField()[ToutTempID];
+        //const fvPatchVectorField& ToutInteUList = U.boundaryField()[ToutInteID];
+        const fvPatchVectorField& ToutcyclonUList = U.boundaryField()[ToutcyclonID];
+        const fvPatchVectorField& ToutFloodUList = U.boundaryField()[ToutFloodID];
+        // targetNameのIDから温度場の取得
+        // const fvPatchScalarField& ToutCyclonTList = T.boundaryField()[ToutCyclonID];
+        //const fvPatchScalarField& ToutWorkWashTList = T.boundaryField()[ToutWorkWashID];
+        //const fvPatchScalarField& ToutTempTList = T.boundaryField()[ToutTempID];
+        //const fvPatchScalarField& ToutInteTList = T.boundaryField()[ToutInteID];
+        const fvPatchScalarField& ToutcyclonTList = T.boundaryField()[ToutcyclonID];
+        const fvPatchScalarField& ToutFloodTList = T.boundaryField()[ToutFloodID];
+
+        // targetNameのIDから面積ベクトルの取得
+        //const vectorField& targetNameSf = mesh().Sf().boundaryField()[targetNameID];
+        // const scalarField& ToutCyclonmagSf = mesh().magSf().boundaryField()[ToutCyclonID];
+        //const scalarField& ToutWorkWashmagSf = mesh().magSf().boundaryField()[ToutWorkWashID];
+        //const scalarField& ToutTempmagSf = mesh().magSf().boundaryField()[ToutTempID];
+        //const scalarField& ToutIntemagSf = mesh().magSf().boundaryField()[ToutInteID];
+        const scalarField& ToutcyclonmagSf = mesh().magSf().boundaryField()[ToutcyclonID];
+        const scalarField& ToutFloodmagSf = mesh().magSf().boundaryField()[ToutFloodID];
+
+        // 温度管理汲上から温度を下げる
+        //const scalar diffTemp = 3.0;
+        // ================================== Start WeightAreaAverageTemp==================================
+        // Open the file to write the results
+        std::ofstream outletWeightAreaTempFile; 
+        outletWeightAreaTempFile.open("constant/outletWeightAreaTempFile");
+
+        if (!outletWeightAreaTempFile.is_open())
+        {
+            FatalErrorIn("codeExecute") << "Cannot open outletWeightAreaTempFile file for writing!" << exit(FatalError);
+        }
+
+        scalar TinMainTank;
+        // scalar TinCyclon;
+        //scalar TinNozzle;
+        //scalar TinTemp;
+
+        // MainTankはfloodとinteから
+        TinMainTank = (
+                         gSum(mag(ToutFloodUList)*ToutFloodmagSf*ToutFloodTList) 
+                       + gSum(mag(ToutcyclonUList)*ToutcyclonmagSf*ToutcyclonTList) 
+                       )
+                        / (gSum(mag(ToutFloodUList)*ToutFloodmagSf) + gSum(mag(ToutcyclonUList)*ToutcyclonmagSf) );
+        // Cyclon outからCyclon Inへ
+        // TinCyclon = gSum(mag(ToutCyclonUList)*ToutCyclonmagSf*ToutCyclonTList)/gSum(mag(ToutCyclonUList)*ToutCyclonmagSf);
+        // waorkwashからnozzeleへ
+        //TinNozzle = gSum(mag(ToutWorkWashUList)*ToutWorkWashmagSf*ToutWorkWashTList)/gSum(mag(ToutWorkWashUList)*ToutWorkWashmagSf);
+        // TouttempからTintempへ
+        //TinTemp = 298.15;//gSum(mag(ToutTempUList)*ToutTempmagSf*ToutTempTList)/gSum(mag(ToutTempUList)*ToutTempmagSf) - diffTemp;
+
+
+        // Write the header part of the file
+        outletWeightAreaTempFile << "FoamFile" << std::endl;
+        outletWeightAreaTempFile << "{" << std::endl;
+        outletWeightAreaTempFile << "    version     2.0;" << std::endl;
+        outletWeightAreaTempFile << "    format      ascii;" << std::endl;
+        outletWeightAreaTempFile << "    class       dictionary;" << std::endl;
+        outletWeightAreaTempFile << "    location    constant;" << std::endl;
+        outletWeightAreaTempFile << "    object      outletWeightAreaTempFile;" << std::endl;
+        outletWeightAreaTempFile << "}" << std::endl;
+        // outletWeightAreaTempFile << "TinCyclon       " << TinCyclon <<";"<< std::endl;
+        outletWeightAreaTempFile << "TinMainTank     " << TinMainTank <<";"<< std::endl;
+        //outletWeightAreaTempFile << "TinNozzle       " << TinNozzle <<";" <<std::endl;
+        //outletWeightAreaTempFile << "TinCyclon       " << TinNozzle <<";" <<std::endl;
+        //outletWeightAreaTempFile << "//TinTemp         " << TinTemp <<";"<< std::endl;
+        outletWeightAreaTempFile << "Time     "<< mesh().time().timeName()<<";" << std::endl;
+        // Close the file
+        outletWeightAreaTempFile.close();
+        // ================================== End WeightAreaAverageTemp==================================
+    #};
+}

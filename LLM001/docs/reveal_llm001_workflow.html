@@ -1,0 +1,771 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LLM001: ポンチ絵からYAML、メッシュ、OpenFOAM解析へ</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reset.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/theme/white.css">
+  <style>
+    :root {
+      --ink: #172033;
+      --muted: #667085;
+      --line: #d9e2ec;
+      --paper: #f7f9fc;
+      --white: rgba(255, 255, 255, 0.92);
+      --blue: #2563eb;
+      --cyan: #0891b2;
+      --green: #16a34a;
+      --orange: #ea580c;
+      --violet: #7c3aed;
+      --red: #dc2626;
+      --dark: #0f172a;
+    }
+
+    body {
+      background:
+        radial-gradient(circle at 12% 10%, rgba(37, 99, 235, 0.16), transparent 30%),
+        radial-gradient(circle at 88% 16%, rgba(8, 145, 178, 0.14), transparent 28%),
+        linear-gradient(135deg, #fbfdff 0%, #eef4fb 100%);
+    }
+
+    .reveal {
+      color: var(--ink);
+      font-family: "Noto Sans JP", "Yu Gothic", "Meiryo", system-ui, sans-serif;
+    }
+
+    .reveal .slides {
+      text-align: left;
+    }
+
+    .reveal h1,
+    .reveal h2,
+    .reveal h3 {
+      color: var(--ink);
+      text-transform: none;
+      letter-spacing: 0;
+      line-height: 1.16;
+    }
+
+    .reveal h1 {
+      font-size: 1.72em;
+      margin-bottom: 0.25em;
+    }
+
+    .reveal h2 {
+      font-size: 1.22em;
+      margin-bottom: 0.55em;
+    }
+
+    .reveal h3 {
+      font-size: 0.72em;
+      margin: 0 0 0.4em;
+    }
+
+    .reveal p,
+    .reveal li {
+      font-size: 0.54em;
+      line-height: 1.55;
+    }
+
+    .lead {
+      color: var(--muted);
+      font-size: 0.72em !important;
+      line-height: 1.55 !important;
+      max-width: 980px;
+    }
+
+    .small {
+      color: var(--muted);
+      font-size: 0.40em !important;
+      line-height: 1.45 !important;
+    }
+
+    .chapter {
+      display: inline-block;
+      color: var(--blue);
+      font-size: 0.38em;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      margin-bottom: 12px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 0.86fr 1.14fr;
+      gap: 28px;
+      align-items: center;
+    }
+
+    .hero-image,
+    .image-box {
+      background: var(--white);
+      border: 1px solid rgba(148, 163, 184, 0.34);
+      border-radius: 18px;
+      box-shadow: 0 22px 70px rgba(15, 23, 42, 0.14);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      padding: 12px;
+    }
+
+    .hero-image {
+      height: 505px;
+    }
+
+    .image-box {
+      height: 440px;
+    }
+
+    .image-box.short {
+      height: 340px;
+    }
+
+    .hero-image img,
+    .image-box img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+
+    .cards-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    .cards-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .card {
+      background: var(--white);
+      border: 1px solid rgba(148, 163, 184, 0.34);
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 14px 38px rgba(15, 23, 42, 0.09);
+    }
+
+    .card p,
+    .card li {
+      font-size: 0.47em;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      color: #fff;
+      background: var(--blue);
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 0.32em;
+      font-weight: 900;
+      margin-bottom: 10px;
+    }
+
+    .tag.green { background: var(--green); }
+    .tag.orange { background: var(--orange); }
+    .tag.cyan { background: var(--cyan); }
+    .tag.violet { background: var(--violet); }
+    .tag.red { background: var(--red); }
+
+    .big-flow {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 12px;
+      align-items: stretch;
+      margin-top: 20px;
+    }
+
+    .flow-node {
+      position: relative;
+      min-height: 132px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 15px 12px;
+      text-align: center;
+      box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08);
+    }
+
+    .flow-node:not(:last-child)::after {
+      content: "→";
+      position: absolute;
+      right: -15px;
+      top: 43%;
+      color: var(--blue);
+      font-weight: 900;
+      font-size: 0.72em;
+      z-index: 2;
+    }
+
+    .flow-node b {
+      display: block;
+      color: var(--blue);
+      font-size: 0.50em;
+      margin-bottom: 6px;
+    }
+
+    .flow-node span {
+      display: block;
+      color: var(--muted);
+      font-size: 0.36em;
+      line-height: 1.38;
+    }
+
+    .swimlane {
+      display: grid;
+      grid-template-columns: 150px 1fr;
+      gap: 0;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      overflow: hidden;
+      background: #fff;
+      box-shadow: 0 14px 38px rgba(15, 23, 42, 0.08);
+    }
+
+    .lane-label {
+      padding: 14px;
+      font-size: 0.45em;
+      font-weight: 900;
+      color: #fff;
+      display: flex;
+      align-items: center;
+    }
+
+    .lane-content {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      min-height: 64px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .lane-content:last-child {
+      border-bottom: none;
+    }
+
+    .pill {
+      display: inline-block;
+      background: #f1f5f9;
+      border: 1px solid #dbe4ee;
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 0.38em;
+      font-weight: 800;
+      color: var(--ink);
+    }
+
+    .code {
+      background: var(--dark);
+      color: #e5edf7;
+      border-radius: 14px;
+      padding: 15px;
+      font-size: 0.38em;
+      line-height: 1.42;
+      white-space: pre;
+      overflow: auto;
+      max-height: 430px;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+    }
+
+    .tree {
+      background: var(--dark);
+      color: #e5edf7;
+      border-radius: 14px;
+      padding: 15px;
+      font-size: 0.36em;
+      line-height: 1.38;
+      white-space: pre;
+      overflow: auto;
+      max-height: 510px;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+    }
+
+    .kbd {
+      display: inline-block;
+      background: #eef2ff;
+      border: 1px solid #c7d2fe;
+      color: #3730a3;
+      border-radius: 5px;
+      padding: 1px 6px;
+      font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+      font-size: 0.86em;
+    }
+
+    .caption {
+      color: var(--muted);
+      font-size: 0.38em !important;
+      margin-top: 10px;
+    }
+
+    .hint {
+      position: absolute;
+      right: 22px;
+      bottom: 16px;
+      color: var(--blue);
+      font-size: 0.32em;
+      font-weight: 900;
+    }
+
+    .section-no {
+      position: absolute;
+      right: 22px;
+      top: 16px;
+      color: var(--muted);
+      font-size: 0.32em;
+      font-weight: 900;
+    }
+  </style>
+</head>
+
+<body>
+<div class="reveal">
+  <div class="slides">
+
+    <section>
+      <div class="hero">
+        <div>
+          <div class="chapter">LLM001 / AI ASSISTED CFD WORKFLOW</div>
+          <h1>ポンチ絵から<br>YAML、メッシュ、解析へ</h1>
+          <p class="lead">やりたいことは「AIにポンチ絵を読み解かせ、YAML仕様を作らせ、そのYAMLからメッシュ作成とOpenFOAM解析設定を生成する」こと。</p>
+          <p class="small">横方向で章を移動、下方向で章の詳細へ進みます。</p>
+        </div>
+        <div class="hero-image">
+          <img src="../img/ani1.gif" alt="CFD解析アニメーション">
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================
+         前段: 背景・動機
+         ====================================================== -->
+    <section>
+      <section>
+        <span class="section-no">前段 01</span>
+        <h2>自動化したいのはこういう解析</h2>
+        <div class="image-box" style="height: 490px;">
+          <img src="../img/ani1.gif" alt="CFD解析アニメーション">
+        </div>
+        <p class="caption">タンク内にポンプが複数あり、流れと温度が絡み合う解析。これをポンチ絵から自動でセットアップできるようにしたい。</p>
+        <div class="hint">↓ 目標とする解析レベル</div>
+      </section>
+
+      <section>
+        <span class="section-no">前段 02</span>
+        <h2>目標とする解析のレベル</h2>
+        <div class="hero">
+          <div class="hero-image">
+            <img src="../img/温度循環プログラム結果.png" alt="温度循環プログラム結果">
+          </div>
+          <div>
+            <p class="lead">発熱量・流量・監視点温度が絡む複合解析。設計者がポンチ絵と仕様を渡すだけで、こうした結果を得られるワークフローを目指す。</p>
+            <div class="cards-2" style="margin-top: 20px;">
+              <div class="card">
+                <span class="tag orange">現状の課題</span>
+                <h3>専門知識と手作業が必要</h3>
+                <p>gmsh・OpenFOAMの操作知識、数十ファイルの設定、境界条件の調整など多くの手作業が発生する。</p>
+              </div>
+              <div class="card">
+                <span class="tag green">LLMで目指すこと</span>
+                <h3>ポンチ絵 → 結果を自動化</h3>
+                <p>形状・流量・発熱条件をAIに伝えるだけで、メッシュ生成・解析設定・実行までを自動化する。</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <section>
+      <section>
+        <span class="section-no">01 / 全体像</span>
+        <h2>このプロジェクトで実現したい流れ</h2>
+        <div class="big-flow">
+          <div class="flow-node"><b>ポンチ絵</b><span>人が描く<br>曖昧な設計意図</span></div>
+          <div class="flow-node"><b>AIがYAML化</b><span>座標・形状・流量・役割を<br>構造化</span></div>
+          <div class="flow-node"><b>AIが生成器を作る</b><span>gmsh用・OpenFOAM用の<br>テンプレートプログラム</span></div>
+          <div class="flow-node"><b>プログラムで生成</b><span>メッシュ、辞書、境界条件を<br>自動作成</span></div>
+          <div class="flow-node"><b>解析・可視化</b><span>simpleFoam<br>ParaView</span></div>
+        </div>
+        <p class="caption">ポイントは、AIが毎回OpenFOAM辞書を直接手書きするのではなく、再利用できる生成プログラムを作ること。</p>
+        <div class="hint">↓ 役割分担</div>
+      </section>
+
+      <section>
+        <h2>誰が何を担当するか</h2>
+        <div class="swimlane">
+          <div class="lane-label" style="background: var(--orange);">人</div>
+          <div class="lane-content">
+            <span class="pill">ポンチ絵を描く</span>
+            <span class="pill">目的を伝える</span>
+            <span class="pill">結果を見て判断する</span>
+          </div>
+          <div class="lane-label" style="background: var(--violet);">AI</div>
+          <div class="lane-content">
+            <span class="pill">ポンチ絵を仕様に翻訳</span>
+            <span class="pill">YAML案を作る</span>
+            <span class="pill">生成プログラムを書く</span>
+            <span class="pill">エラー原因を整理する</span>
+          </div>
+          <div class="lane-label" style="background: var(--blue);">プログラム</div>
+          <div class="lane-content">
+            <span class="pill">YAMLを読む</span>
+            <span class="pill">gmshメッシュを作る</span>
+            <span class="pill">OpenFOAM辞書を作る</span>
+          </div>
+          <div class="lane-label" style="background: var(--green);">OpenFOAM</div>
+          <div class="lane-content">
+            <span class="pill">gmshToFoam</span>
+            <span class="pill">checkMesh</span>
+            <span class="pill">simpleFoam</span>
+            <span class="pill">post.foamで可視化</span>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2>なぜYAMLを中心にするのか</h2>
+        <div class="cards-3">
+          <div class="card">
+            <span class="tag">読みやすい</span>
+            <h3>設計意図が見える</h3>
+            <p>ポンプ座標、外径、流量、流入/流出の別が、人間にもAIにも読みやすい形で残る。</p>
+          </div>
+          <div class="card">
+            <span class="tag cyan">再生成できる</span>
+            <h3>手修正を減らす</h3>
+            <p>YAMLを変えれば、gmshメッシュとOpenFOAM設定を同じ条件から作り直せる。</p>
+          </div>
+          <div class="card">
+            <span class="tag green">拡張しやすい</span>
+            <h3>ケーススタディへ</h3>
+            <p>流量やポンプ位置を変える解析を、将来的に自動化しやすくなる。</p>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <section>
+      <section>
+        <span class="section-no">02 / 入力</span>
+        <h2>出発点はポンチ絵</h2>
+        <div class="image-box">
+          <img src="../img/20260508_ポンチ絵2.png" alt="ポンチ絵">
+        </div>
+        <p class="caption">ポンチ絵には、タンク寸法、ポンプ位置、ポンプ径、流量、流入/流出の意味が含まれている。</p>
+        <div class="hint">↓ これをAIに仕様化させる</div>
+      </section>
+
+      <section>
+        <h2>AIに作ってもらいたいYAML</h2>
+        <div class="code">tank:
+  size_m: [0.600, 1.000, 0.160]
+
+pumps:
+  - id: pumpA
+    patch: pumpA_outlet
+    role: outlet
+    center_m: [0.150, 0.800]
+    outer_diameter_m: 0.070
+    inner_diameter_m: 0.060
+    bottom_offset_m: 0.010
+    top: tankTop
+    flow_L_min: 50.0
+
+  - id: pumpB
+    patch: pumpB_inlet
+    role: inlet
+    center_m: [0.450, 0.500]
+    outer_diameter_m: 0.040
+    inner_diameter_m: 0.030
+    bottom_offset_m: 0.010
+    top: tankTop
+    flow_L_min: 50.0</div>
+      </section>
+
+      <section>
+        <h2>YAMLに落とす情報</h2>
+        <div class="cards-2">
+          <div class="card">
+            <h3>形状情報</h3>
+            <ul>
+              <li>タンク寸法</li>
+              <li>ポンプ中心座標</li>
+              <li>ポンプ外径・内径</li>
+              <li>底面からの浮き量</li>
+              <li>上面をタンク上面まで届かせる指定</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>解析情報</h3>
+            <ul>
+              <li>流入か流出か</li>
+              <li>OpenFOAMパッチ名</li>
+              <li>流量 L/min</li>
+              <li>水の動粘度</li>
+              <li>ソルバ・乱流モデル</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <section>
+      <section>
+        <span class="section-no">03 / 生成プログラム</span>
+        <h2>AIに作ってもらうのは「変換器」</h2>
+        <p class="lead">YAMLを読んで、gmshとOpenFOAMのファイルを生成するプログラムをAIに作らせる。これにより、条件変更時に同じ流れを再利用できる。</p>
+        <div class="cards-2">
+          <div class="card">
+            <span class="tag cyan">gmsh generator</span>
+            <h3>geometry/LLM001_pumpA.py</h3>
+            <p>YAMLからタンクとポンプを作り、CAD差分して <span class="kbd">LLM001_pumpAB.msh</span> を出す。</p>
+          </div>
+          <div class="card">
+            <span class="tag green">OpenFOAM generator</span>
+            <h3>tools/generate_openfoam_from_yaml.py</h3>
+            <p>YAMLから <span class="kbd">0/U</span>, <span class="kbd">0/p</span>, <span class="kbd">controlDict</span> などを作る。</p>
+          </div>
+        </div>
+        <div class="hint">↓ gmsh側</div>
+      </section>
+
+      <section>
+        <h2>メッシュ作成プログラムの考え方</h2>
+        <div class="cards-2">
+          <div class="card">
+            <h3>CAD差分</h3>
+            <ul>
+              <li>タンクをBoxソリッドとして作る。</li>
+              <li>ポンプを外径円柱ソリッドとして作る。</li>
+              <li>流体領域 = タンク − ポンプA − ポンプB。</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>境界面分類</h3>
+            <ul>
+              <li>ポンプA: <span class="kbd">pumpA_outlet</span></li>
+              <li>ポンプB: <span class="kbd">pumpB_inlet</span></li>
+              <li>側面: <span class="kbd">pumpWall</span></li>
+              <li>タンク壁: <span class="kbd">topWall</span> など</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2>OpenFOAM設定生成の考え方</h2>
+        <div class="cards-2">
+          <div class="card">
+            <h3>role: inlet</h3>
+            <div class="code" style="max-height: 220px;">pumpB_inlet
+{
+    type                flowRateInletVelocity;
+    volumetricFlowRate  constant 0.0008333333333; // 50 L/min
+    value               uniform (0 0 0);
+}</div>
+          </div>
+          <div class="card">
+            <h3>role: outlet</h3>
+            <div class="code" style="max-height: 220px;">pumpA_outlet
+{
+    type        pressureInletOutletVelocity;
+    value       uniform (0 0 0);
+}
+
+// p側は fixedValue 0</div>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <section>
+      <section>
+        <span class="section-no">04 / ファイル関係</span>
+        <h2>ファイルのつながり</h2>
+        <div class="tree">LLM001/
+├── config/
+│   └── LLM001.yaml              # AIが作る・人が確認する仕様
+├── geometry/
+│   ├── LLM001_pumpA.py          # AIが作ったgmsh生成プログラム
+│   └── run_gmsh.sh              # gmsh実行入口
+├── tools/
+│   ├── config_io.py             # YAML読込
+│   └── generate_openfoam_from_yaml.py
+│                                # AIが作ったOpenFOAM設定生成器
+├── mesh/
+│   └── LLM001_pumpAB.msh        # gmsh出力
+├── case/
+│   ├── 0/                       # U, p, k, omega, nut
+│   ├── constant/                # 物性・polyMesh
+│   ├── system/                  # controlDict等
+│   ├── Allmesh                  # 変換とcheckMesh
+│   └── Allrun                   # simpleFoam実行
+├── docs/
+└── logs/</div>
+        <div class="hint">↓ 実行フロー</div>
+      </section>
+
+      <section>
+        <h2>実行時の流れ</h2>
+        <div class="big-flow">
+          <div class="flow-node"><b>LLM001.yaml</b><span>仕様</span></div>
+          <div class="flow-node"><b>LLM001_pumpA.py</b><span>gmsh mesh</span></div>
+          <div class="flow-node"><b>gmshToFoam</b><span>polyMesh</span></div>
+          <div class="flow-node"><b>generate_openfoam...</b><span>0/ constant/ system/</span></div>
+          <div class="flow-node"><b>simpleFoam</b><span>解析結果</span></div>
+        </div>
+      </section>
+    </section>
+
+    <section>
+      <section>
+        <span class="section-no">05 / 手順</span>
+        <h2>メッシュ作成</h2>
+        <div class="cards-2">
+          <div class="card">
+            <h3>コマンド</h3>
+            <div class="code" style="max-height: 170px;">source /usr/lib/openfoam/openfoam2512/etc/bashrc
+cd LLM001
+./Allmesh</div>
+          </div>
+          <div class="card">
+            <h3>実行される処理</h3>
+            <ol>
+              <li>YAMLからgmshメッシュ作成</li>
+              <li>YAMLからOpenFOAM辞書生成</li>
+              <li>gmshToFoam</li>
+              <li>changeDictionary</li>
+              <li>checkMesh</li>
+              <li>post.foam作成</li>
+            </ol>
+          </div>
+        </div>
+        <div class="hint">↓ 解析実行</div>
+      </section>
+
+      <section>
+        <h2>解析実行</h2>
+        <div class="cards-2">
+          <div class="card">
+            <h3>一括実行</h3>
+            <div class="code" style="max-height: 170px;">source /usr/lib/openfoam/openfoam2512/etc/bashrc
+cd LLM001
+./Allrun</div>
+          </div>
+          <div class="card">
+            <h3>解析設定</h3>
+            <ul>
+              <li>ソルバ: <span class="kbd">simpleFoam</span></li>
+              <li>流体: 水</li>
+              <li>乱流モデル: <span class="kbd">kOmegaSST</span></li>
+              <li>入口: 流量入口</li>
+              <li>出口: 圧力出口</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2>結果確認</h2>
+        <div class="cards-2">
+          <div class="image-box short">
+            <img src="../img/20260508_計算結果デモ.jpg" alt="計算結果デモ">
+          </div>
+          <div class="card">
+            <h3>ParaViewで開く</h3>
+            <div class="code" style="max-height: 100px;">LLM001/case/post.foam</div>
+            <p>メッシュ、速度ベクトル、流量収支を確認する。結果を見て、必要ならポンチ絵やYAMLへ戻る。</p>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <section>
+      <section>
+        <span class="section-no">06 / 今後</span>
+        <h2>この仕組みで目指すこと</h2>
+        <div class="cards-3">
+          <div class="card">
+            <span class="tag">1</span>
+            <h3>AIがYAML候補を作る</h3>
+            <p>ポンチ絵や文章から、タンク寸法・ポンプ条件をYAMLに落とす。</p>
+          </div>
+          <div class="card">
+            <span class="tag cyan">2</span>
+            <h3>プログラムで確実に生成</h3>
+            <p>YAMLからgmshとOpenFOAM辞書を再現性よく生成する。</p>
+          </div>
+          <div class="card">
+            <span class="tag green">3</span>
+            <h3>結果から改善へ戻す</h3>
+            <p>流量収支や可視化結果を見て、YAMLや形状条件を更新する。</p>
+          </div>
+        </div>
+        <div class="hint">↓ 展望</div>
+      </section>
+
+      <section>
+        <h2>今後の展望</h2>
+        <div class="cards-2">
+          <div class="card">
+            <span class="tag orange">近い目標</span>
+            <ul>
+              <li>YAMLスキーマ検証を追加する。</li>
+              <li>複数ポンプ・複数出口に対応する。</li>
+              <li>checkMeshと流量収支を自動要約する。</li>
+              <li>ParaView画像を自動出力する。</li>
+            </ul>
+          </div>
+          <div class="card">
+            <span class="tag violet">長期目標</span>
+            <ul>
+              <li>ポンチ絵からYAMLを自動生成する。</li>
+              <li>解析結果をAIが読み取り、改善案を出す。</li>
+              <li>設計パラメータスタディを自動化する。</li>
+              <li>結果をレポートやスライドへ自動反映する。</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2>まとめ</h2>
+        <div class="card">
+          <ul>
+            <li>人はポンチ絵と目的を与える。</li>
+            <li>AIはポンチ絵をYAML仕様へ変換し、生成プログラムも作る。</li>
+            <li>プログラムはYAMLからgmshメッシュとOpenFOAM設定を作る。</li>
+            <li>OpenFOAMで計算し、ParaViewで結果を確認する。</li>
+            <li>結果を見て、YAMLやポンチ絵へ戻るサイクルを作る。</li>
+          </ul>
+        </div>
+        <p class="caption">重要なのは「AIが毎回手作業する」のではなく、「AIが再利用可能な生成ワークフローを作る」こと。</p>
+      </section>
+    </section>
+
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.js"></script>
+<script>
+  Reveal.initialize({
+    hash: true,
+    slideNumber: "c/t",
+    transition: "slide",
+    width: 1280,
+    height: 720,
+    margin: 0.055,
+    controlsTutorial: true,
+    navigationMode: "default"
+  });
+</script>
+</body>
+</html>

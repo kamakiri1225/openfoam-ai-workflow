@@ -1,0 +1,136 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2412                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+application     buoyantPimpleFoam;
+
+startFrom       latestTime;
+
+startTime       0;
+
+stopAt          endTime;
+
+endTime         1000;
+
+deltaT          0.001;
+
+writeControl    adjustableRunTime;//timeStep;//adjustableRunTime;//runTime;//timeStep;
+
+writeInterval   10;
+
+purgeWrite      0;
+
+writeFormat     ascii;
+
+writePrecision  6;
+
+writeCompression off;
+
+timeFormat      general;
+
+timePrecision   6;
+
+runTimeModifiable true;
+
+adjustTimeStep  on;//no;
+
+maxCo           1000;
+
+functions
+{
+    wallHeatFlux
+    {
+      type    wallHeatFlux;
+      libs    ("libfieldFunctionObjects.so");
+      region    region0;
+      log    yes;
+      writeControl    writeTime;
+      writeFields    no;
+      patches    ();
+    }
+    htc
+    {
+        type            heatTransferCoeff;
+        libs            (fieldFunctionObjects);
+        field           T;
+        writeControl    writeTime;//timeStep;
+        writeInterval   1;
+        htcModel        fixedReferenceTemperature;
+        patches         (pumpinWallheat_wall_2-4_0 floodinWallhate_wall_2-4_3 underWall_wall_2-4_3 model_other_wall topSlip_slip_2-4_3);
+	    	TRef    298.15;
+    }
+
+  residuals
+  {
+    type solverInfo;
+    libs
+      (
+        "libutilityFunctionObjects.so"
+      );
+    fields
+      (
+        ".*"
+      );
+  }
+  fieldMinMax1
+  {
+    type fieldMinMax;
+    libs      (fieldFunctionObjects ); 	// Mandatory entries (unmodifiable)// Mandatory entries (runtime modifiable)
+    mode magnitude;
+    fields   ( U  p T); 	// Optional entries (runtime modifiable)
+    location yes;
+    writePrecision 8;
+    writeToFile yes;
+    useUserTime yes;
+    region region0;
+    enabled yes;
+    log yes;
+    timeStart 0;
+    timeEnd 8000;
+    executeControl timeStep;
+    executeInterval 1;
+    writeControl     writeTime;//timeStep;//adjustableRunTime;
+    writeInterval 1;
+  }
+  yPlus1
+  {
+    type yPlus;
+    libs
+      (
+        fieldFunctionObjects
+      ); 	// Mandatory entries (unmodifiable)// Optional (inherited) entries
+    writePrecision 8;
+    writeToFile yes;
+    useUserTime yes;
+    region region0;
+    enabled yes;
+    log yes;
+    timeStart 0;
+    timeEnd 8000;
+    executeControl timeStep;
+    executeInterval 1;
+    writeControl writeTime;//timeStep;
+    // writeInterval 100;
+  }
+  #include "continuityErrorVolDict"
+  // #include "outletWeightAreaTempFile_code"
+  #include "probes"
+  // #include "volumeAveTemp"
+  // #include "inletOutletTemp"
+}
+
+
+
+// ************************************************************************* //

@@ -1,0 +1,19 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Version:  v2006
+    \\  /    A nd           | Website:  www.openfoam.com
+     \\/     M anipulation  |
+-------------------------------------------------------------------------------
+Description
+    Writes out values of fields from cells nearest to specified locations.
+
+\*---------------------------------------------------------------------------*/
+#includeEtc "caseDicts/postProcessing/probes/probes.cfg" //probes 設定の挿入
+fields (p p_rgh); // プローブする場
+probeLocations
+(
+(-1.9027 1.51955 0.01795) // プローブ座標 P1
+);
+interpolationScheme cellPoint; // 補間スキーム
+// ************************************************************************* //

@@ -1,0 +1,86 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2006                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      topoSetDict;
+}
+ 
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+ 
+actions
+(
+    {
+        name    surfaceVolumeZone6_1;
+        type    cellZoneSet;
+        action  new;
+        source  boxToCell;
+        box     (0 0 -100) (0.25 0.30 100); //Min座標 Max座標
+    }
+    {
+        name    surfaceVolumeZone6_2;
+        type    cellZoneSet;
+        action  new;
+        source  boxToCell;
+        box     (0.25 0 -100) (0.5 0.30 100); //Min座標 Max座標
+    }
+    {
+        name    surfaceVolumeZone6_3;
+        type    cellZoneSet;
+        action  new;
+        source  boxToCell;
+        box     (0 0.30 -100) (0.25 0.60 100); //Min座標 Max座標
+    }
+    {
+        name    surfaceVolumeZone6_4;
+        type    cellZoneSet;
+        action  new;
+        source  boxToCell;
+        box     (0.25 0.30 -100) (0.5 0.60 100); //Min座標 Max座標
+    }
+    {
+        name    surfaceVolumeZone6_5;
+        type    cellZoneSet;
+        action  new;
+        source  boxToCell;
+        box     (0 0.60 -100) (0.25 0.90 100); //Min座標 Max座標
+    }
+    {
+        name    surfaceVolumeZone6_6;
+        type    cellZoneSet;
+        action  new;
+        source  boxToCell;
+        box     (0.25 0.60 -100) (0.5 0.90 100); //Min座標 Max座標
+    }
+ 
+    {
+        name    surfaceVolumeZone3_1;
+        type    cellZoneSet;
+        action  new;
+        source  boxToCell;
+        box     (0 0 -100) (0.5 0.30 100); //Min座標 Max座標
+    }
+    {
+        name    surfaceVolumeZone3_2;
+        type    cellZoneSet;
+        action  new;
+        source  boxToCell;
+        box     (0 0.30 -100) (0.5 0.60 100); //Min座標 Max座標
+    }
+    {
+        name    surfaceVolumeZone3_3;
+        type    cellZoneSet;
+        action  new;
+        source  boxToCell;
+        box     (0 0.60 -100) (0.5 0.90 100); //Min座標 Max座標
+    }
+);
+ 
+// ************************************************************************* //
